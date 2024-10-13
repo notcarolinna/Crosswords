@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <string>
 #include <fstream>
+#include <algorithm> // Para std::sort
 
 class CrossWord {
 private:
@@ -10,14 +11,19 @@ private:
     std::string wordsFilename;
     std::vector<std::vector<char>> grid;
     std::unordered_map<int, std::vector<std::string>> words;
+    int numRows; 
+    int numCols;   
 
 public:
-    CrossWord(std::string gridFile, std::string wordFile) : gridFilename(gridFile), wordsFilename(wordFile) {}
+    CrossWord(std::string gridFile, std::string wordFile) 
+        : gridFilename(gridFile), wordsFilename(wordFile), numRows(0), numCols(0) {}
 
     bool GridStream();
     void WordStream();
     std::vector<std::vector<char>> getGrid();
     std::unordered_map<int, std::vector<std::string>> getWords();
+    int getNumRows() const { return numRows; } 
+    int getNumCols() const { return numCols; }  
 };
 
 bool CrossWord::GridStream() {
@@ -31,6 +37,11 @@ bool CrossWord::GridStream() {
 
     while (std::getline(file, line)) {
         std::vector<char> row;
+        
+        if (line.length() > 0) {
+            numCols = line.length();
+            numRows++;  
+        }
 
         for (char c : line) {
             row.push_back(c);
@@ -40,6 +51,8 @@ bool CrossWord::GridStream() {
     }
 
     file.close();
+
+    std::cout << numRows << " x " << numCols << "\n" << std::endl;
 
     for (const std::vector<char>& row : grid) {
         for (char c : row) {
@@ -69,9 +82,15 @@ void CrossWord::WordStream() {
 
     file.close();
 
+    std::vector<int> lengths; // Armazena os comprimentos das palavras
     for (const auto& pair : words) {
-        int length = pair.first;
-        const std::vector<std::string>& wordList = pair.second;
+        lengths.push_back(pair.first);
+    }
+
+    std::sort(lengths.begin(), lengths.end());
+
+    for (int length : lengths) {
+        const std::vector<std::string>& wordList = words[length];
 
         std::cout << "\nPalavras com " << length << " letras:\n";
         for (const std::string& word : wordList) {
@@ -91,7 +110,7 @@ std::unordered_map<int, std::vector<std::string>> CrossWord::getWords() {
 int main() {
     CrossWord crossword("grid-11x11.txt", "teste.txt");  
 
-    std::cout<<"\n\nGrid: \n";
+    std::cout << "\n\nGrid:";
     crossword.GridStream();
     crossword.WordStream();
 
