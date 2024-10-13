@@ -12,7 +12,6 @@ private:
     std::string wordsFilename;
     std::vector<std::vector<char>> grid;
     std::unordered_map<size_t, std::vector<std::string>> words; 
-    std::vector<std::string> insertedWords;
     std::vector<std::vector<bool>> availablePositions;
     size_t numRows; 
     size_t numCols;   
@@ -37,7 +36,6 @@ public:
 
     size_t getNumRows() const { return numRows; } 
     size_t getNumCols() const { return numCols; }
-    std::vector<std::string> getInsertedWords();  
 };
 
 bool CrossWord::GridStream() {
@@ -145,8 +143,6 @@ void CrossWord::PlaceWord(const std::string& word, size_t row, size_t col, int d
                 availablePositions[row + i][col] = false;  
             }
         }
-
-        insertedWords.push_back(word);
         PrintGrid();  
     } else {
         std::cout << "Não é possível inserir a palavra '" << word << "' em (" << row << ", " << col << ") na direção " << direction << std::endl;
@@ -163,10 +159,6 @@ void CrossWord::PrintGrid() const {
         std::cout << std::endl;
     }
     std::cout << std::endl; 
-}
-
-std::vector<std::string> CrossWord::getInsertedWords() {
-    return insertedWords;
 }
 
 std::vector<std::vector<char>> CrossWord::getGrid() const {
