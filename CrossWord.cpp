@@ -6,31 +6,61 @@
 
 class CrossWord {
 private:
-    std::string filename;
+    std::string gridFilename;
+    std::string wordsFilename;
     std::vector<std::vector<char>> grid;
     std::unordered_map<int, std::vector<std::string>> words;
 
 public:
-    CrossWord();
-    CrossWord(std::string filename);
+    CrossWord(std::string gridFile, std::string wordFile) : gridFilename(gridFile), wordsFilename(wordFile) {}
 
+    bool GridStream();
     void WordStream();
     std::vector<std::vector<char>> getGrid();
     std::unordered_map<int, std::vector<std::string>> getWords();
 };
 
-CrossWord::CrossWord(std::string filename) : filename(filename) {
-    WordStream();
+bool CrossWord::GridStream() {
+    std::ifstream file("./resources/" + gridFilename);
+    std::string line;
+
+    if (!file.is_open()) {
+        std::cerr << "Falha ao abrir o arquivo " << gridFilename << std::endl;
+        return false;
+    }
+
+    while (std::getline(file, line)) {
+        std::vector<char> row;
+
+        for (char c : line) {
+            row.push_back(c);
+        }
+
+        grid.push_back(row);
+    }
+
+    file.close();
+
+    for (const std::vector<char>& row : grid) {
+        for (char c : row) {
+            std::cout << c;
+        }
+        std::cout << std::endl;
+    }
+
+    return true;
 }
 
 void CrossWord::WordStream() {
-    std::ifstream file("./resources/" + filename);
+    std::ifstream file("./resources/" + wordsFilename);
     std::string word;
 
     if (!file.is_open()) {
-        std::cerr << "Falha ao abrir o arquivo " << filename << std::endl;
+        std::cerr << "Falha ao abrir o arquivo " << wordsFilename << std::endl;
         return;
     }
+
+    words.clear();
 
     while (file >> word) {
         int wordLength = word.length();
@@ -59,7 +89,11 @@ std::unordered_map<int, std::vector<std::string>> CrossWord::getWords() {
 }
 
 int main() {
-    CrossWord CrossWord("lista_palavras.txt");
+    CrossWord crossword("grid-11x11.txt", "teste.txt");  
+
+    std::cout<<"\n\nGrid: \n";
+    crossword.GridStream();
+    crossword.WordStream();
 
     return 0;
 }
