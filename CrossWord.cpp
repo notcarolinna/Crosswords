@@ -4,26 +4,26 @@
 #include <string>
 #include <fstream>
 
-class Reader {
+class CrossWord {
 private:
     std::string filename;
     std::vector<std::vector<char>> grid;
     std::unordered_map<int, std::vector<std::string>> words;
 
 public:
-    Reader();
-    Reader(std::string filename);
+    CrossWord();
+    CrossWord(std::string filename);
 
     void WordStream();
     std::vector<std::vector<char>> getGrid();
     std::unordered_map<int, std::vector<std::string>> getWords();
 };
 
-Reader::Reader(std::string filename) : filename(filename) {
+CrossWord::CrossWord(std::string filename) : filename(filename) {
     WordStream();
 }
 
-void Reader::WordStream() {
+void CrossWord::WordStream() {
     std::ifstream file("./resources/" + filename);
     std::string word;
 
@@ -50,16 +50,16 @@ void Reader::WordStream() {
     }
 }
 
-std::vector<std::vector<char>> Reader::getGrid() {
+std::vector<std::vector<char>> CrossWord::getGrid() {
     return grid;
 }
 
-std::unordered_map<int, std::vector<std::string>> Reader::getWords() {
+std::unordered_map<int, std::vector<std::string>> CrossWord::getWords() {
     return words;
 }
 
 int main() {
-    Reader reader("lista_palavras.txt");
+    CrossWord CrossWord("lista_palavras.txt");
 
     return 0;
 }
