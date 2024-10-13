@@ -104,12 +104,18 @@ void CrossWord::WordStream() {
 bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int direction) {
     size_t wordLength = word.length();
 
+    std::cout << "Verificando se a palavra '" << word << "' pode ser inserida em (" 
+              << row << ", " << col << ") na direção " << direction << std::endl;
+    PrintGrid();
+
     if (direction == 0) {  // Horizontal
         if (col + wordLength > numCols) {
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) { 
-            if (!availablePositions[row][col + i]) { 
+            std::cout << "\nVerificando posição (" << row << ", " << col + i << "): ";
+            if (!availablePositions[row][col + i] && grid[row][col + i] != word[i]) { 
+                std::cout << "\n '" << grid[row][col+i] << "' diferente de '" << word[i] << "'" << std::endl;
                 return false;  
             }
         }
@@ -118,7 +124,9 @@ bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int d
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) {
-            if (!availablePositions[row + i][col]) {
+            std::cout << "\nVerificando posição (" << row << ", " << col + i << "): ";
+            if (!availablePositions[row + i][col] && grid[row + i][col] != word[i]) {
+                std::cout << "\n" << grid[row][col+i] << "' diferente de '" << word[i] << "'" << std::endl;
                 return false;  
             }
         }
@@ -130,20 +138,22 @@ bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int d
 void CrossWord::PlaceWord(const std::string& word, size_t row, size_t col, int direction) {
     if (Placeable(word, row, col, direction)) {
         size_t wordLength = word.length();
-        std::cout << "Inserindo " << word << " em (" << row << ", " << col << ") na direção " << direction << std::endl;
+        std::cout << "\n\nInserindo '" << word << "' em (" << row << ", " << col << ") na direção " << direction << std::endl;
 
-        if (direction == 0) {  // Horizontal
+        if (direction == 0) { 
             for (size_t i = 0; i < wordLength; i++) {
                 grid[row][col + i] = word[i];
                 availablePositions[row][col + i] = false;  
             }
-        } else {  // Vertical
+        } else {
             for (size_t i = 0; i < wordLength; i++) {
                 grid[row + i][col] = word[i];
                 availablePositions[row + i][col] = false;  
             }
         }
-        PrintGrid();  
+
+        std::cout << "Grid atualizado após inserir '" << word << std::endl;
+        PrintGrid(); 
     } else {
         std::cout << "Não é possível inserir a palavra '" << word << "' em (" << row << ", " << col << ") na direção " << direction << std::endl;
     }
@@ -151,7 +161,6 @@ void CrossWord::PlaceWord(const std::string& word, size_t row, size_t col, int d
 
 
 void CrossWord::PrintGrid() const {
-    std::cout << "Estado atual da grade:\n";
     for (const auto& row : grid) {
         for (char c : row) {
             std::cout << c;
@@ -179,10 +188,12 @@ int main() {
 
     crossword.WordStream();
 
-    // Linha, Coluna e Direção (1 = vertical, 0 = horizontal)
+    // Linha, Coluna e Direção (0 = Horizontal, 1 = Vertical)
     std::vector<std::tuple<std::string, size_t, size_t, int>> testWords = {
-        {"COELHO", 0, 1, 1},  // Inserir "COELHO" verticalmente na linha 0, coluna 1
-        {"BOTA", 1, 1, 0},    // Inserir "BOTA" horizontalmente na linha 1, coluna 1
+        {"COELHO", 0, 1, 1}, 
+        {"BOTA", 1, 0, 0},   
+        {"AZUL", 1, 3, 1},   
+        {"CHULO", 4, 0, 0} 
     };
 
     for (const auto& wordInfo : testWords) {
