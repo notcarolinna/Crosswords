@@ -80,12 +80,18 @@ void CrossWord::WordStream() {
     words.clear();
 
     while (file >> word) {
-        words[word.length()].push_back(word);
+        if (std::all_of(word.begin(), word.end(), [](char c) {
+            return std::isalpha(c);
+        })) {
+            words[word.length()].push_back(word);
+        } else {
+            std::cout << "Palavra ignorada: " << word << std::endl;
+        }
     }
 
     file.close();
-
-        std::vector<int> lengths;
+   
+    std::vector<int> lengths;
     for(const auto& pair : words) {
         lengths.push_back(pair.first);
     }
@@ -100,6 +106,7 @@ void CrossWord::WordStream() {
         std::cout << std::endl;
     }
 }
+
 
 bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int direction) {
     size_t wordLength = word.length();
@@ -209,7 +216,7 @@ std::unordered_map<size_t, std::vector<std::string>> CrossWord::getWords() const
 }
 
 int main() {
-    CrossWord crossword("grid-7x7.txt", "teste.txt");  
+    CrossWord crossword("grid-teste.txt", "teste2.txt");  
 
     if (!crossword.GridStream()) {
         std::cerr << "Falha ao carregar a grade." << std::endl;
