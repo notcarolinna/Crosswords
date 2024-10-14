@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm> 
 #include <tuple>
+#include <chrono>
 
 class CrossWord {
 private:
@@ -111,23 +112,22 @@ void CrossWord::WordStream() {
 bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int direction) {
     size_t wordLength = word.length();
 
-    std::cout << "Verificando se a palavra '" << word << "' pode ser inserida em (" 
-              << row << ", " << col << ") na direção " << direction << std::endl;
-    PrintGrid();
+    //std::cout << "Verificando se a palavra '" << word << "' pode ser inserida em (" << row << ", " << col << ") na direção " << direction << std::endl;
+    //PrintGrid();
 
     if (direction == 0) {  // Horizontal
         if (col + wordLength > numCols) {
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) { 
-            std::cout << "\nVerificando posição (" << row << ", " << col + i << "): ";
+            //std::cout << "\nVerificando posição (" << row << ", " << col + i << "): ";
             char currentChar = grid[row][col + i];
             if (currentChar == '.') { 
-                std::cout << "\nNão é possível inserir a palavra devido a um ponto (.)" << std::endl;
+                //std::cout << "\nNão é possível inserir a palavra devido a um ponto (.)" << std::endl;
                 return false;  
             }
             if (!availablePositions[row][col + i] && currentChar != word[i] && currentChar != '?') { 
-                std::cout << "\n '" << currentChar << "' diferente de '" << word[i] << "'" << std::endl;
+                //std::cout << "\n '" << currentChar << "' diferente de '" << word[i] << "'" << std::endl;
                 return false;  
             }
         }
@@ -136,14 +136,14 @@ bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int d
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) {
-            std::cout << "\nVerificando posição (" << row + i << ", " << col << "): ";
+            //std::cout << "\nVerificando posição (" << row + i << ", " << col << "): ";
             char currentChar = grid[row + i][col];
             if (currentChar == '.') { 
-                std::cout << "\nNão é possível inserir a palavra devido a um ponto (.)" << std::endl;
+                //std::cout << "\nNão é possível inserir a palavra devido a um ponto (.)" << std::endl;
                 return false;  
             }
             if (!availablePositions[row + i][col] && currentChar != word[i] && currentChar != '?') {
-                std::cout << "\n" << currentChar << "' diferente de '" << word[i] << "'" << std::endl;
+                //std::cout << "\n" << currentChar << "' diferente de '" << word[i] << "'" << std::endl;
                 return false;  
             }
         }
@@ -216,17 +216,21 @@ std::unordered_map<size_t, std::vector<std::string>> CrossWord::getWords() const
 }
 
 int main() {
-    CrossWord crossword("grid-teste.txt", "teste2.txt");  
+    CrossWord crossword("grid-25x25.txt", "palavras.txt");  
 
     if (!crossword.GridStream()) {
         std::cerr << "Falha ao carregar a grade." << std::endl;
         return 1;
     }
 
-    crossword.WordStream();
-    crossword.Backpropagation();
+std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    crossword.PrintGrid();
+crossword.WordStream();
+crossword.Backpropagation();
 
+crossword.PrintGrid();
+
+std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+std::cout << "Tempo de execução = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
     return 0;
 }
