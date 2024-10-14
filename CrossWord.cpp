@@ -32,6 +32,7 @@ public:
     bool Backtrack(size_t wordIndex, const std::vector<std::string>& wordList);
     void RemoveWord(const std::string& word, size_t row, size_t col, int direction);
     void PrintGrid() const; 
+    void PrintWords() const;
 
     std::vector<std::vector<char>> getGrid() const;
     std::unordered_map<size_t, std::vector<std::string>> getWords() const;
@@ -92,21 +93,7 @@ void CrossWord::WordStream() {
     }
 
     file.close();
-   
-    std::vector<int> lengths;
-    for(const auto& pair : words) {
-        lengths.push_back(pair.first);
-    }
-
-    std::sort(lengths.begin(), lengths.end());
-
-    for(int length : lengths) {
-        std::cout << length << " : ";
-        for(const std::string& word : words[length]) {
-            std::cout << word << " ";
-        }
-        std::cout << std::endl;
-    }
+    PrintWords();
 }
 
 bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int direction) {
@@ -115,6 +102,7 @@ bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int d
     if (direction == 0) {
         //se a palavra não cabe na linha ou se a posição anterior ou posterior não for um '?'
         if (col + wordLength > numCols || (col > 0 && grid[row][col - 1] != '?') || (col + wordLength < numCols && grid[row][col + wordLength] != '?')) {
+            std::cout << "Palavra " << word << " não cabe na linha " << row << std::endl;
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) { 
@@ -122,27 +110,32 @@ bool CrossWord::Placeable(const std::string& word, size_t row, size_t col, int d
             // se a posição contiver um '.' ou se a posição não estiver disponível e o caractere atual 
             // for diferente do caractere da palavra e diferente de '?'
             if (currentChar == '.' || (!availablePositions[row][col + i] && currentChar != word[i] && currentChar != '?')) {
+                std::cout << "Palavra " << word << " não pode ser colocada na linha " << row << std::endl;
                 return false;  
             }
         }
     } else {
         if (row + wordLength > numRows || (row > 0 && grid[row - 1][col] != '?') || (row + wordLength < numRows && grid[row + wordLength][col] != '?')) {
+            std::cout << "Palavra " << word << " não cabe na coluna " << col << std::endl;
             return false; 
         }
         for (size_t i = 0; i < wordLength; i++) {
             char currentChar = grid[row + i][col];
             if (currentChar == '.' || (!availablePositions[row + i][col] && currentChar != word[i] && currentChar != '?')) {
+                std::cout << "Palavra " << word << " não pode ser colocada na coluna " << col << std::endl;
                 return false;  
             }
         }
     }
 
+    std::cout << "Palavra " << word << " pode ser colocada." << std::endl;
     return true; 
 }
 
 void CrossWord::PlaceWord(const std::string& word, size_t row, size_t col, int direction) {
     if (Placeable(word, row, col, direction)) {
         size_t wordLength = word.length();
+        std::cout << "Colocando a palavra " << word << " na linha " << row << " e coluna " << col << std::endl;
 
         if (direction == 0) { 
             for (size_t i = 0; i < wordLength; i++) {
@@ -160,6 +153,7 @@ void CrossWord::PlaceWord(const std::string& word, size_t row, size_t col, int d
 
 void CrossWord::RemoveWord(const std::string& word, size_t row, size_t col, int direction) {
     size_t wordLength = word.length();
+    std::cout << "Removendo a palavra " << word << " da linha " << row << " e coluna " << col << std::endl;
 
     if (direction == 0) {  
         for (size_t i = 0; i < wordLength; i++) {
@@ -180,26 +174,28 @@ void CrossWord::RemoveWord(const std::string& word, size_t row, size_t col, int 
 
 bool CrossWord::Backtrack(size_t wordIndex, const std::vector<std::string>& wordList) {
     if (wordIndex == wordList.size()) {
+        std::cout << "Todas as palavras foram colocadas." << std::endl;
         return true;
     }
 
     const std::string& word = wordList[wordIndex];
-    
+
     for (size_t row = 0; row < numRows; row++) {
         for (size_t col = 0; col < numCols; col++) {
             for (int direction = 0; direction < 2; direction++) { // 0 = horizontal, 1 = vertical
-                if (Placeable(word, row, col, direction)) { // se a palavra pode ser colocada
-                    PlaceWord(word, row, col, direction);
-                    if (Backtrack(wordIndex + 1, wordList)) { // se a palavra foi colocada com sucesso
-                        return true;
+                if (Placeable(word, row, col, direction)) {
+                    PlaceWord(word, row, col, direction); // Coloca a palavra
+                    if (Backtrack(wordIndex + 1, wordList)) { // Tenta a próxima palavra
+                        return true; // Se todas as palavras foram colocadas com sucesso
                     }
-                    RemoveWord(word, row, col, direction); // se a palavra não foi colocada com sucesso
+                    RemoveWord(word, row, col, direction); // Remove se não foi possível colocar
                 }
             }
         }
     }
-    return false;
+    return false; 
 }
+
 
 void CrossWord::PrintGrid() const {
     std::cout << "\n\n";
@@ -212,6 +208,24 @@ void CrossWord::PrintGrid() const {
     std::cout << std::endl; 
 }
 
+void CrossWord::PrintWords() const {
+    std::cout << "\n\nPalavras lidas:" << std::endl;
+
+    std::vector<int> keys;
+    for (const auto& pair : words) {
+        keys.push_back(pair.first);
+    }
+
+    std::sort(keys.begin(), keys.end(), std::greater<int>());
+
+    for(int key : keys) {
+        std::cout << key << " :";
+        for (const std::string& word : words.at(key)) {
+            std::cout << " " << word;
+        }
+        std::cout << std::endl;
+    }
+}
 std::vector<std::vector<char>> CrossWord::getGrid() const {
     return grid;
 }
@@ -221,30 +235,25 @@ std::unordered_map<size_t, std::vector<std::string>> CrossWord::getWords() const
 }
 
 int main() {
-    CrossWord crossword("grid-7x7.txt", "teste.txt");  
+    CrossWord crossword("grid-7x7.txt", "teste.txt");
 
     if (!crossword.GridStream()) {
         std::cerr << "Falha ao carregar a grade." << std::endl;
         return 1;
     }
 
-    auto begin = std::chrono::steady_clock::now();
-
     crossword.WordStream();
-    
+
     std::vector<std::string> wordList;
     for (const auto& entry : crossword.getWords()) {
         wordList.insert(wordList.end(), entry.second.begin(), entry.second.end());
     }
 
     if (crossword.Backtrack(0, wordList)) {
-        std::cout << "Solução encontrada!" << std::endl;
+        std::cout << "Solução encontrada." << std::endl;
     } else {
         std::cout << "Nenhuma solução encontrada." << std::endl;
     }
-
-    auto end = std::chrono::steady_clock::now();
-    std::cout << "Tempo de execução: " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << " s" << std::endl;
 
     crossword.PrintGrid(); 
 
