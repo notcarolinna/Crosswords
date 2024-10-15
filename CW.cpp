@@ -70,13 +70,12 @@ class Library {
                 delete w;
             }
         }
-        void FindWord(const string& s) const {
+        const Words* FindWord(const string& s) const {
             auto it = word_map_.find(s);
             if (it != word_map_.end()) {
-                for (const Word* w : it->second) {
-                    cout << " " << w->word;
-                }
-                cout << endl;
+                return &it->second;
+            } else {
+                return NULL;
             }
         }
         bool IsWord(string s) const {
@@ -163,6 +162,17 @@ class Library {
 Library lib;
 
 // -------------------------------------------------------------------------
+//-Attr
+struct Attr {
+    bool is_empty() const { return has_blanks && !has_letters; }
+    bool is_partial() const { return has_blanks && has_letters; }
+    bool is_full() const { return !has_blanks && has_letters; }
+    bool has_letters = false;
+    bool has_blanks = false;
+};
+
+
+// -------------------------------------------------------------------------
 //-Grid
 struct Grid {
     Grid() {
@@ -185,6 +195,10 @@ struct Grid {
         assert(in_bounds(p));
         return lines[p.row][p.col];
     }
+    void write_box(const Point& p, char c) {
+        assert(in_bounds(p));
+        lines[p.row][p.col] = c;
+    }
     bool is_block(const Point& p) const {
         return box(p) == '.';
     }
@@ -198,15 +212,30 @@ struct Grid {
     bool in_bounds(const Point& p) const {
         return (p.row >= 0 && p.row < rows() && p.col >= 0 && p.col < cols());
     }
-    string GetString(const Span& s) const {
+    string GetString(const Span& s, Attr& attr) const {
         int len = s.len;
         string temp;
         temp.resize(len);
         for (int i = 0; i < len; i++) {
             Point p = s.GetPoint(i);
-            temp[i] = box(p);
+            char c = box(p);
+            if (c == '?') {
+                attr.has_blanks = true;
+            }
+            else if (c >= 'A' && c <= 'Z') {
+                attr.has_letters = true;
+            }
+            temp[i] = c;
         }
         return temp;
+    }
+    void WriteString(const Span& s, const string& t) {
+        int len = s.len;
+        assert(t.length() == len);
+        for (int i = 0; i < len; i++) {
+            Point p = s.GetPoint(i);
+            write_box(p, t[i]);
+        }
     }
     bool Next(Point& p, bool vert) {
         if (vert) {
@@ -300,7 +329,8 @@ struct Grid {
     void PrintSpans() const {
         cout << "Spans:" << endl;
         for (const Span& s : spans) {
-            cout << "  " << s << " " << GetString(s) << endl;
+            Attr attr;
+            cout << "  " << s << " " << GetString(s, attr) << endl;
         }
     }
     string name;
@@ -308,6 +338,22 @@ struct Grid {
     Spans spans;
 
 };
+
+// -------------------------------------------------------------------------
+//-Slot
+struct Slot {
+    Slot(const Span s, const string& p) : span(s), pattern(p) {}
+    friend ostream& operator<<(ostream& os, const Slot& s);
+
+    Span span;
+    string pattern;
+};
+typedef vector<Slot> Slots;
+
+ostream& operator<<(ostream& os, const Slot& s) {
+    os << s.span << " '" << s.pattern << "'";
+    return os;
+}
 
 // -------------------------------------------------------------------------
 //-Solver
@@ -322,25 +368,80 @@ class Solver {
 
     private:
         void Loop() {
+            Slots empty_slots;
+            Slots partial_slots; // os que vamos usar
+            Slots full_slots;
+
             for (const Span& s : grid_->spans) {
+                Attr attr;
+                string temp = grid_->GetString(s, attr);
+                if (attr.is_empty()) {
+                    empty_slots.push_back(Slot(s, temp));
+                } else if (attr.is_partial()) {
+                    partial_slots.push_back(Slot(s, temp));
+                } else if (attr.is_full()) {
+                    full_slots.push_back(Slot(s, temp));
+                }
+            }
+            int num_empty = empty_slots.size();
+            int num_partial = partial_slots.size();
+            int num_full = full_slots.size();
+
+            cout << "empty = " << num_empty << endl;
+            cout << "partial = " << num_partial << endl;
+            cout << "full = " << num_full << endl;
+            if (num_partial == 0 && num_empty == 0) {
+                cout << "SOLUTION!" << endl;
+                // now do what
+            }
+            //if(first_exec) {
+              //  first_exec = false;
+               // CommitSlot(empty_slots[0]);
+            //}
+            //else {
+                assert(num_partial > 0);
+                CommitSlot(partial_slots[0]);
+           // }
+        }
+        void CommitSlot(const Slot& slot) {
+            cout << "COMMIT slot" << slot << endl;
+            cout << "Possible word choices for this slot are" << endl;
+
+            const Words* words = lib.FindWord(slot.pattern);
+            if (words) {
+                for(const Word* w : *words) {
+                    cout << " " << w->word;
+                }
+                assert(!words->empty());
+                const Word* w = (*words)[0];
+                cout << endl;
+                cout << "test write!" << endl;
+                grid_->WriteString(slot.span, w->word);
+                cout << "new grid is:" << endl;
+                grid_->Print();
 
             }
+            else {
+                cout << "No matches to pattern" << endl;
+            }
+
         }
+
+        bool first_exec = true;
         Grid* grid_;
 };
 
 int main() {
     Grid grid("T1 - IA");
-    grid.LoadFromFile("./resources/grid-teste-2.txt");
+    grid.LoadFromFile("./resources/grid-teste.txt");
     grid.Check();
-    grid.Print();
     grid.FillSpans();
     //grid.PrintSpans();
 
     lib.ReadFromFile("./resources/teste2.txt", grid.max_size());
 
-    //Solver solver(grid);
-    //solver.Solve();
+    Solver solver(&grid);
+    solver.Solve();
 
     // ...
 
