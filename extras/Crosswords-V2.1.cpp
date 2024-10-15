@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <assert.h>
+#include <cassert>
 #include <fstream>
 #include <algorithm>
 using namespace std;
@@ -45,7 +45,7 @@ struct Span {
 typedef vector<Span> Spans;
 
 ostream& operator<<(ostream& os, const Span& s) {
-    os << '[' << s.point << ']' << "len=" << s.len << " vert=" << s.vert << ')';
+    os << '[' << s.point << ']' << " len=" << s.len << " vert=" << s.vert;
     return os;
 }
 
@@ -75,17 +75,12 @@ class Library {
             if (it != word_map_.end()) {
                 return &it->second;
             } else {
-                return NULL;
+                return nullptr;
             }
         }
         bool IsWord(string s) const {
             auto it = word_map_.find(s);
-            if (it == word_map_.end()) {
-                return false;
-            }
-            else {
-                return true;
-            }
+            return it != word_map_.end();
         }
         void ComputeStats() {
             assert(counts_.empty());
@@ -100,35 +95,35 @@ class Library {
         }
         void PrintStats() {
             cout << "counts of each word length" <<endl;
-            for (int i = 1; i < counts_.size(); i++) {
+            for (size_t i = 1; i < counts_.size(); i++) {
                 cout << i << ") " << counts_[i] << endl;
             }
         }
-        string GetWord(int i) const {
-            assert(i >= 0 && i < words_.size());
+        string GetWord(size_t i) const {
+            assert(i < words_.size());
             return words_[i]->word;
         }
         void CreatePatternHash(Word* w) {
             int len = w->len();
             if (len > 7) return;
             int num_patterns = 1 << len;
-            //cout << "PATTERN HASH on " << w->word << endl;
             for (int i = 0; i < num_patterns; i++) {
-                //cout << "  " << i << endl;
                 string temp = w->word;
-                for (int j = 0; j<len; j++) {
+                for (int j = 0; j < len; j++) {
                     if ((i >> j) & 1) {
                         temp[j] = '?';
                     }
                 }
-                //cout << "  " << temp << endl;
                 word_map_[temp].push_back(w);
             }
         }
         void ReadFromFile(string fileName, int max_size) {
-            ifstream file;
-            file.open(fileName);
-            while (file.is_open() && !file.eof()) {
+            ifstream file(fileName);
+            if (!file.is_open()) {
+                cerr << "Error opening file: " << fileName << endl;
+                return;
+            }
+            while (!file.eof()) {
                 string line;
                 getline(file, line);
                 if (!line.empty()) {
@@ -149,7 +144,7 @@ class Library {
             cout << "Read " << words_.size() << " words" << endl;
         }
         void DebugBuckets() const {
-            for (int i = 0; i < word_map_.bucket_count(); i++) {
+            for (size_t i = 0; i < word_map_.bucket_count(); i++) {
                 cout << "[" << i << "] " << word_map_.bucket_size(i) << endl;
             }
         }
@@ -282,7 +277,6 @@ struct Grid {
             }
             if (!in_bounds(p)) return;
             Point startp = p;
-            //cout << "SPAN START: " << p <<endl;
 
             int len = 0;
             bool keep_going = false;
@@ -290,7 +284,6 @@ struct Grid {
                 keep_going = NextStopAtWrap(p, vert);
                 len++;
             } while (keep_going && !is_block(p));
-            //cout << "END OF SPAN!!! len=" << len << endl;
             spans.push_back(Span(startp, len, vert));
         }
     }
@@ -299,10 +292,13 @@ struct Grid {
         FillSpans(false); // horizontal
         FillSpans(true); // vertical
     }
-    int LoadFromFile(string fileName) {
-        ifstream file;
-        file.open(fileName);
-        while (file.is_open() && !file.eof()) {
+    void LoadFromFile(string fileName) {
+        ifstream file(fileName);
+        if (!file.is_open()) {
+            cerr << "Error opening file: " << fileName << endl;
+            return;
+        }
+        while (!file.eof()) {
             string line;
             getline(file, line);
             if (!line.empty()) {
@@ -310,19 +306,19 @@ struct Grid {
             }
         }
     }
-    int Check() const {
+    void Check() const {
         int rows = lines.size();
-        int cols = lines[0].size(); // could be length()
-        for (int i = 3; i < lines.size(); i++) {
+        int cols = lines[0].size();
+        for (int i = 0; i < rows; i++) {
             assert(lines[i].size() == cols);
         }
     }
-    int Print() const {
+    void Print() const {
         cout << "Grid: " << name
              << " (rows=" << rows()
              << ", cols=" << cols() << ")"
              << " max_size=" << max_size() << endl;
-        for (string s : lines) {
+        for (const string& s : lines) {
             cout << "   " << s << endl;
         }
     }
@@ -359,22 +355,22 @@ ostream& operator<<(ostream& os, const Slot& s) {
 //-Solver
 class Solver {
     public:
-        Solver(Grid* g) : grid_(g) {}
-        void Solve() {
+        Solver() {}
+        void Solve(Grid& grid) {
             cout << "Solving" << endl;
-            grid_->Print();
-            Loop();
+            grid.Print();
+            Loop(grid);
         }
 
     private:
-        void Loop() {
+        void Loop(Grid& grid) {
             Slots empty_slots;
-            Slots partial_slots; // os que vamos usar
+            Slots partial_slots;
             Slots full_slots;
 
-            for (const Span& s : grid_->spans) {
+            for (const Span& s : grid.spans) {
                 Attr attr;
-                string temp = grid_->GetString(s, attr);
+                string temp = grid.GetString(s, attr);
                 if (attr.is_empty()) {
                     empty_slots.push_back(Slot(s, temp));
                 } else if (attr.is_partial()) {
@@ -387,48 +383,38 @@ class Solver {
             int num_partial = partial_slots.size();
             int num_full = full_slots.size();
 
-            cout << "empty = " << num_empty << endl;
-            cout << "partial = " << num_partial << endl;
-            cout << "full = " << num_full << endl;
+            for(const Slot& s : full_slots) {
+                if(!lib.IsWord(s.pattern)) {
+                    cerr << "Error: Full slot pattern is not a valid word: " << s.pattern << endl;
+                    return;
+                }
+            }
+
             if (num_partial == 0 && num_empty == 0) {
                 cout << "SOLUTION!" << endl;
-                // now do what
+                grid.Print();
+                return;
             }
-            //if(first_exec) {
-              //  first_exec = false;
-               // CommitSlot(empty_slots[0]);
-            //}
-            //else {
-                assert(num_partial > 0);
-                CommitSlot(partial_slots[0]);
-           // }
-        }
-        void CommitSlot(const Slot& slot) {
-            cout << "COMMIT slot" << slot << endl;
-            cout << "Possible word choices for this slot are" << endl;
 
+            if (num_partial > 0) {
+                CommitSlot(grid, partial_slots[0]);
+            } else if (num_empty > 0) {
+                CommitSlot(grid, empty_slots[0]);
+            }
+        }
+        void CommitSlot(Grid& grid, const Slot& slot) {
             const Words* words = lib.FindWord(slot.pattern);
             if (words) {
                 for(const Word* w : *words) {
-                    cout << " " << w->word;
+                    if (w->len() == slot.span.len) { // Verifica se a palavra cabe no espaço
+                        grid.WriteString(slot.span, w->word);
+                        Loop(grid);
+                    }
                 }
-                assert(!words->empty());
-                const Word* w = (*words)[0];
-                cout << endl;
-                cout << "test write!" << endl;
-                grid_->WriteString(slot.span, w->word);
-                cout << "new grid is:" << endl;
-                grid_->Print();
-
+            } else {
+                cerr << "No matches to pattern: " << slot.pattern << endl;
             }
-            else {
-                cout << "No matches to pattern" << endl;
-            }
-
         }
-
-        bool first_exec = true;
-        Grid* grid_;
 };
 
 int main() {
@@ -436,14 +422,11 @@ int main() {
     grid.LoadFromFile("./resources/grid-teste.txt");
     grid.Check();
     grid.FillSpans();
-    //grid.PrintSpans();
 
     lib.ReadFromFile("./resources/teste2.txt", grid.max_size());
 
-    Solver solver(&grid);
-    solver.Solve();
-
-    // ...
+    Solver solver;
+    solver.Solve(grid);
 
     return 0;
 }
