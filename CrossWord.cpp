@@ -139,33 +139,33 @@ bool CrossWord::Placeable(const string& word, size_t row, size_t col, int direct
             }
         }
         if(col + wordLength > numCols && grid[row][col + wordLength] != '.'){
-            //cout << "word " << word << " não pode ser colocada na linha " << row << endl;
+            //cout << "word " << word << " nï¿½o pode ser colocada na linha " << row << endl;
             return false;
         }
     }
     else {
         if (row + wordLength > numRows) {
-            //cout << "\n1 word " << word << " não cabe na coluna " << col << endl;
+            //cout << "\n1 word " << word << " nï¿½o cabe na coluna " << col << endl;
             return false;
         }
         if(row > 0 && grid[row - 1][col] != '.'){
-            //cout << "2 word " << word << " não cabe na coluna " << col << endl;
+            //cout << "2 word " << word << " nï¿½o cabe na coluna " << col << endl;
             return false;
         }
         if (row + wordLength < numRows && grid[row + wordLength][col] != '.') {
-            //cout << "3 word " << word << " não cabe na coluna " << col << endl;
+            //cout << "3 word " << word << " nï¿½o cabe na coluna " << col << endl;
             return false;
         }
 
         for (size_t i = 0; i < wordLength; i++) {
             char currentChar = grid[row + i][col];
             if (currentChar == '.' || (currentChar != word[i] && currentChar != '?')) {
-                //cout << "Palavra " << word << " não pode ser colocada na coluna " << col << endl;
+                //cout << "Palavra " << word << " nï¿½o pode ser colocada na coluna " << col << endl;
                 return false;
             }
         }
         if(row + wordLength > numRows && grid[row + wordLength][col] != '.'){
-            //cout << "Palavra " << word << " não pode ser colocada na coluna " << row << endl;
+            //cout << "Palavra " << word << " nï¿½o pode ser colocada na coluna " << row << endl;
             return false;
         }
     }

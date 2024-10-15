@@ -3,7 +3,7 @@ TARGET = CrossWord
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17
 
-SRC = CrossWord.cpp
+SRC = NewCrossWord.cpp
 OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGET)
