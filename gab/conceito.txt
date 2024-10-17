@@ -1,0 +1,143 @@
+Considerando o seguinte grid
+
+..?????.
+.....?..
+.....?..
+?...????
+?.......
+?.......
+
+Percorro o vetor horizontalmente e se tiver mais que um ? na mesma linha associo o id da palavra a esse caractere no grid
+e adiciono esse id no mapa.
+
+
+Após a iteração horizontal o grid fica assim: (usar grid de int, pra permitir mais que 10 palavras hehe)
+
+.111111.
+.....?..
+.....?..
+?...2222
+?.......
+?.......
+
+E o mapa fica assim: (vou representar tipo json pra ficar mais facil de entender, mas é classe mesmo)
+
+[
+    {
+        id: 1,
+        tamanho: 6,
+        startPos: {0, 1},
+        dir: HORIZONTAL (enum),
+        restricoes: [],
+    },
+    {
+        id: 2,
+        tamanho: 4,
+        startPos: {3, 4},
+        dir: HORIZONTAL (enum),
+        restricoes: [],
+    }
+]
+
+
+
+
+Agora percorro o vetor verticalmente e procuro por caracteres diferente de '.' em sequencia, se tiver adiciono a palavra vertical no mapa
+e adiciono as restrições nos ids correspondentes.
+
+A palavra vertical da esquerda não tem restrição, então ela só adiciono ela no mapa:
+
+{
+    id: 3,
+    tamanho: 3,
+    startPos: {3, 0},
+    dir: VERTICAL (enum),
+    restricoes: [],
+}
+
+A outra tem duas restrições:
+ - A primeira letra dela deve ser a mesma que a 5 letra da primeira palavra
+ - A quarta letra dela deve ser a mesma que a 2 letra da segunda palavra
+
+Então o mapa após adicionar essa palavra e todas as restricoes fica assim:
+
+[
+    {
+        id: 1,
+        tamanho: 6,
+        startPos: {0, 1},
+        dir: HORIZONTAL (enum),
+        restricoes: [
+            {
+                minhaLetra: 4, (quinta letra)
+                idPalavra: 4,
+                letraPalavra: 0, (primeira letra)
+            }
+        ],
+    },
+    {
+        id: 2,
+        tamanho: 4,
+        startPos: {3, 4},
+        dir: HORIZONTAL (enum),
+        restricoes: [
+            {
+                minhaLetra: 1, (segunda letra)
+                idPalavra: 4,
+                letraPalavra: 3, (quarta letra)
+            }
+        ],
+    },
+    {
+        id: 3,
+        tamanho: 3,
+        startPos: {3, 0},
+        dir: VERTICAL (enum),
+        restricoes: [],
+    },
+    {
+        id: 4,
+        tamanho: 4,
+        startPos: {0, 5},
+        dir: VERTICAL (enum),
+        restricoes: [
+            {
+                minhaLetra: 0, (primeira letra)
+                idPalavra: 1,
+                letraPalavra: 4, (quinta letra)
+            },
+            {
+                minhaLetra: 3, (quarta letra)
+                idPalavra: 2,
+                letraPalavra: 1, (segunda letra)
+            },
+        ],
+    },
+]
+
+
+Agora com esse mapa, pego  palavra com mais restrições (4) e monto uma árvore a partir dela, e se ainda faltar palavras vou ordenando pelas 
+com mais restrições:
+
+- Palavra 4 tem a 1 na restrição
+- Palavra 1 só tem a 4 de volta, então não segue a arvore a partir dela, volta pra 4
+- Palavra 4 tem a 2 na restrição
+- Palavra 2 só tem a 4 de volta, então não segue a arvore a partir dela, volta pra 4
+- Palavra 4 não tem mais restrições
+- Pega palavra com mais restrições entre as restantes (só sobrou a 3)
+
+    4                3
+  /  \
+ 1    2
+
+ Agora é questão de percorrer esse mapa botando palavras ai e verificando as restrições
+
+ Bota uma no 4
+ Tenta botar no 1, caso não consiga troca a palavra 4
+ Caso consiga botar a 1, tenta colocar a 2
+ Caso nao consiga botar a 2 troca a 4
+E assim por diante......
+
+
+
+
