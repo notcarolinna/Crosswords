@@ -1,27 +1,22 @@
-TARGET = cross.bin
+TARGET = Crosswords
 
-SRCDIR = srcs
-INCLUDEDIR = $(SRCDIR)/include
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++17
 
-SOURCE = $(wildcard $(SRCDIR)/*.cpp)
-HEADERS = $(wildcard $(INCLUDEDIR)/*.h)
-
-CC = g++
-CFLAGS = -g
+SRC = Crosswords.cpp
+OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCE) $(HEADERS)
-	$(CC) -o $(TARGET) $(SOURCE) -I$(INCLUDEDIR)
+$(TARGET): $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-debug: $(SOURCE) $(HEADERS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCE) -I$(INCLUDEDIR)
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm *.bin
+	rm -f $(OBJ) $(TARGET)
 
 # Regra para rodar o programa (opcional)
 run: $(TARGET)
 	./$(TARGET)
-
-	

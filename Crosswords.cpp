@@ -85,9 +85,9 @@ class Dictionary {
             auto it = wordMap_.find(s);
             if (it != wordMap_.end()) {
                 return &it->second;
-            } else {
-                return NULL;
             }
+            return NULL;
+            
         }
         bool isWord(std::string s) const {
             auto it = wordMap_.find(s);
@@ -98,30 +98,13 @@ class Dictionary {
                 return true;
             }
         }
-        void calculateStatistics() {
-            assert(counts_.empty());
-            int maxSize = 25;
-            counts_.resize(maxSize);
-            for (const Word* w : words_) {
-                int length = w->word.length();
-                if (length < maxSize) {
-                    counts_[length]++;
-                }
-            }
-        }
-        void printStatistics() {
-            std::cout << "Counts of each word length" << std::endl;
-            for (int i = 1; i < counts_.size(); i++) {
-                std::cout << i << ") " << counts_[i] << std::endl;
-            }
-        }
         std::string getWord(int i) const {
             assert(i >= 0 && i < words_.size());
             return words_[i]->word;
         }
         void createDefaultHash(Word* w) {
             int length = w->getLength();
-            if (length > 7) return;
+            if (length > maxSize_) return;
             int numPatterns = 1 << length;
             for (int i = 0; i < numPatterns; i++) {
                 std::string temp = w->word;
@@ -134,6 +117,7 @@ class Dictionary {
             }
         }
         void parseFile(std::string fileName, int maxSize) {
+            maxSize_ = maxSize;
             std::ifstream file;
             file.open(fileName);
             while (file.is_open() && !file.eof()) {
@@ -147,7 +131,7 @@ class Dictionary {
                     }
                     length = line.length();
                     if(std::all_of(line.begin(), line.end(), [] (char c) {return std::isalpha(c);} )) {
-                        if (length <= maxSize) {
+                        if (length <= maxSize_) {
                             Word* w = new Word(line);
                             words_.push_back(w);
                             createDefaultHash(w);
@@ -170,7 +154,7 @@ class Dictionary {
     private:
         Words words_;
         WordMap wordMap_;
-        std::vector<int> counts_;
+        int maxSize_;
 };
 
 Dictionary dictionary;
@@ -375,6 +359,9 @@ class Solver {
 
     private:
         void loop(Grid grid) {
+            if(solutionFound)
+                return;
+
             Slots emptySlots;
             Slots partialSlots;
             Slots fullSlots;
@@ -394,14 +381,25 @@ class Solver {
             int numPartial = partialSlots.size();
             int numFull = fullSlots.size();
 
+            //grid.print();
+
             if (numPartial == 0 && numEmpty == 0) {
                 std::cout << "SOLUTION!" << std::endl;
                 grid.print();
                 solutionFound = true;
                 return;
             }
-            assert(numPartial > 0);
-            commitSlot(grid, partialSlots[0]);
+            //assert(numPartial > 0 || numEmpty > 0);
+
+            if(numPartial == 0 && numEmpty > 0) {
+                //std::cout << partialSlots[0].pattern << std::endl;
+                commitSlot(grid, emptySlots[0]);
+            }
+            else {
+                //std::cout << emptySlots[0].pattern << std::endl;
+                assert(numPartial > 0);
+                commitSlot(grid, partialSlots[0]);
+            }
         }
         void commitSlot(Grid& grid, const Slot& slot) {
             if(solutionFound == true)
@@ -420,12 +418,13 @@ class Solver {
 };
 
 int main() {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     Grid grid("T1 - AI");
 
     std::cout << "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << std::endl;
     std::cout << "Grid: loading" << std::endl;
 
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     grid.loadFromFile("./resources/grid-7x7.txt");
     std::cout << "Grid: verifying" << std::endl;
@@ -436,7 +435,7 @@ int main() {
     grid.print();
 
     std::cout << "Dictionary: loading" << std::endl;
-    dictionary.parseFile("./resources/teste.txt", grid.getMaxSize());
+    dictionary.parseFile("./resources/palavras.txt", grid.getMaxSize());
 
     std::cout << "Solver: creating" << std::endl;
     Solver solver;
