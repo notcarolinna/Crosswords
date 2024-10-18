@@ -1,29 +1,43 @@
-#include "grid.h"
-#include "attribute.h"
-#include <cassert>
-#include <fstream>
-#include <algorithm>
+#include "./include/Grid.h"
 
-Grid::Grid() {
-    name = "UNTITLED";
+std::ostream& operator<<(std::ostream& os, const Grid::Point& p) {
+    os << '(' << p.row << ',' << p.col << ')';
+    return os;
 }
 
-Grid::Grid(std::string n) {
-    name = n;
+Grid::Point Grid::Interval::getPoint(int i) const {
+    assert(i >= 0 && i < length);
+    if (vertical) {
+        return Point(point.row + i, point.col);
+    } else {
+        return Point(point.row, point.col + i);
+    }
 }
 
-int Grid::getRows() const { return rows_.size(); }
+std::ostream& operator<<(std::ostream& os, const Grid::Interval& s) {
+    os << '[' << s.point << ']' << " length=" << s.length << " vertical=" << s.vertical << ')';
+    return os;
+}
+
+Grid::Grid() : name("UNTITLED") {}
+
+Grid::Grid(std::string n) : name(std::move(n)) {}
+
+int Grid::getRows() const {
+    return rows_.size();
+}
 
 int Grid::getCols() const {
     if (rows_.empty()) {
         return 0;
-    }
-    else {
+    } else {
         return rows_[0].size();
     }
 }
 
-int Grid::getMaxSize() const { return std::max(getRows(), getCols()); }
+int Grid::getMaxSize() const {
+    return std::max(getRows(), getCols());
+}
 
 char Grid::getCell(const Point& p) const {
     assert(isInside(p));
@@ -54,14 +68,15 @@ bool Grid::isInside(const Point& p) const {
 
 std::string Grid::getString(const Interval& s, Attribute& attribute) const {
     int length = s.length;
-    std::string temp(length, ' '); // Inicializa a string com o tamanho necessário
+    std::string temp;
+    temp.resize(length);
     for (int i = 0; i < length; i++) {
         Point p = s.getPoint(i);
         char c = getCell(p);
         if (c == '?') {
-            attribute.setHasSpaces(true);
+            attribute.hasSpaces = true;
         } else if (c >= 'A' && c <= 'Z') {
-            attribute.setHasLetters(true);
+            attribute.hasLetters = true;
         }
         temp[i] = c;
     }
@@ -84,8 +99,7 @@ bool Grid::nextPoint(Point& p, bool vertical) {
             p.row = 0;
             p.col++;
         }
-    }
-    else {
+    } else {
         p.col++;
         if (p.col >= getCols()) {
             p.col = 0;
@@ -104,8 +118,7 @@ bool Grid::nextPointStopOnWrap(Point& p, bool vertical) {
             p.col++;
             wrap = true;
         }
-    }
-    else {
+    } else {
         p.col++;
         if (p.col >= getCols()) {
             p.col = 0;
@@ -118,7 +131,7 @@ bool Grid::nextPointStopOnWrap(Point& p, bool vertical) {
 
 void Grid::fillIntervals(bool vertical) {
     Point p;
-    while(isInside(p)) {
+    while (isInside(p)) {
         while (isInside(p) && isBlock(p)) {
             nextPoint(p, vertical);
         }
@@ -131,7 +144,7 @@ void Grid::fillIntervals(bool vertical) {
             continueLoop = nextPointStopOnWrap(p, vertical);
             length++;
         } while (continueLoop && !isBlock(p));
-        intervals.push_back(Interval(startPoint, length, vertical));
+        intervals.push_back(Interval{startPoint, length, vertical});
     }
 }
 
@@ -141,17 +154,16 @@ void Grid::fillIntervals() {
     fillIntervals(true);
 }
 
-void Grid::loadFromFile(std::string fileName) {
-    std::ifstream file;
-    file.open(fileName);
+void Grid::loadFromFile(const std::string& fileName) {
+    std::ifstream file(fileName);
     assert(file.is_open());
     while (!file.eof()) {
         std::string line;
         std::getline(file, line);
         if (!line.empty()) {
             int length = line.length();
-            if (line[length-1] == '\r') {
-                line = line.substr(0, length-1);
+            if (line[length - 1] == '\r') {
+                line = line.substr(0, length - 1);
             }
             rows_.push_back(line);
         }
@@ -161,19 +173,18 @@ void Grid::loadFromFile(std::string fileName) {
 void Grid::verify() const {
     int rows = rows_.size();
     int cols = rows_[0].size();
-    for (int i = 0; i < rows_.size(); i++) {
-        assert(rows_[i].size() == cols);
+    for (const auto& row : rows_) {
+        assert(row.size() == cols);
     }
 }
 
 void Grid::print() const {
     std::cout << "Grid: " << name
-         << " (rows=" << getRows()
-         << ", cols=" << getCols() << ")"
-         << " maxSize=" << getMaxSize() << std::endl;
-    for (int i = 0; i < rows_.size(); i++) {
-        std::string s = rows_[i];
-        std::cout << s << "  (" << s.length() << ")" << std::endl;
+              << " (rows=" << getRows()
+              << ", cols=" << getCols() << ")"
+              << " maxSize=" << getMaxSize() << std::endl;
+    for (const auto& row : rows_) {
+        std::cout << row << "  (" << row.length() << ")" << std::endl;
     }
 }
 
@@ -183,4 +194,8 @@ void Grid::printIntervals() const {
         Attribute attribute;
         std::cout << "  " << s << " " << getString(s, attribute) << std::endl;
     }
+}
+
+const Grid::Intervals& Grid::getIntervals() const {
+    return intervals;
 }

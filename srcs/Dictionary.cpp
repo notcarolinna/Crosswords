@@ -1,11 +1,6 @@
-#include "dictionary.h"
-#include "utils.h"
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <cassert>
+#include "../include/Dictionary.h"
 
-Dictionary dictionary;
+Dictionary::Dictionary() {}
 
 Dictionary::~Dictionary() {
     for (Word* w : words_) {
@@ -17,37 +12,16 @@ const Words* Dictionary::findWord(const std::string& s) const {
     auto it = wordMap_.find(s);
     if (it != wordMap_.end()) {
         return &it->second;
-    } else {
-        return NULL;
     }
+    return NULL;
 }
 
 bool Dictionary::isWord(std::string s) const {
     auto it = wordMap_.find(s);
     if (it == wordMap_.end()) {
         return false;
-    }
-    else {
+    } else {
         return true;
-    }
-}
-
-void Dictionary::calculateStatistics() {
-    assert(counts_.empty());
-    int maxSize = 25;
-    counts_.resize(maxSize);
-    for (const Word* w : words_) {
-        int length = w->word.length();
-        if (length < maxSize) {
-            counts_[length]++;
-        }
-    }
-}
-
-void Dictionary::printStatistics() {
-    std::cout << "Counts of each word length" << std::endl;
-    for (int i = 1; i < counts_.size(); i++) {
-        std::cout << i << ") " << counts_[i] << std::endl;
     }
 }
 
@@ -58,11 +32,11 @@ std::string Dictionary::getWord(int i) const {
 
 void Dictionary::createDefaultHash(Word* w) {
     int length = w->getLength();
-    if (length > 7) return;
+    if (length > maxSize_) return;
     int numPatterns = 1 << length;
     for (int i = 0; i < numPatterns; i++) {
         std::string temp = w->word;
-        for (int j = 0; j<length; j++) {
+        for (int j = 0; j < length; j++) {
             if ((i >> j) & 1) {
                 temp[j] = '?';
             }
@@ -72,6 +46,7 @@ void Dictionary::createDefaultHash(Word* w) {
 }
 
 void Dictionary::parseFile(std::string fileName, int maxSize) {
+    maxSize_ = maxSize;
     std::ifstream file;
     file.open(fileName);
     while (file.is_open() && !file.eof()) {
@@ -80,12 +55,12 @@ void Dictionary::parseFile(std::string fileName, int maxSize) {
         if (!line.empty()) {
             trim(line);
             int length = line.length();
-            if (line[length-1] == '\r') {
-                line = line.substr(0, length-1);
+            if (line[length - 1] == '\r') {
+                line = line.substr(0, length - 1);
             }
             length = line.length();
-            if(std::all_of(line.begin(), line.end(), [] (char c) {return std::isalpha(c);} )) {
-                if (length <= maxSize) {
+            if (std::all_of(line.begin(), line.end(), [](char c) { return std::isalpha(c); })) {
+                if (length <= maxSize_) {
                     Word* w = new Word(line);
                     words_.push_back(w);
                     createDefaultHash(w);
