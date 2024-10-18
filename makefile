@@ -23,5 +23,4 @@ clean:
 # Regra para rodar o programa (opcional)
 run: $(TARGET)
 	./$(TARGET)
-
 	
