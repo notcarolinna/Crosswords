@@ -14,6 +14,8 @@ public:
 
     void loadTreeIndexes();
     std::vector<int> getTreeIndexes() const;
+    std::vector<Slot*> getSlots() const;
+    bool solve(const Dictionary* dictionary);
 
 private:
     std::vector<int> _treeIndexes;

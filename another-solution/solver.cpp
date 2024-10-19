@@ -70,3 +70,44 @@ std::vector<int> Solver::getTreeIndexes() const {
     return _treeIndexes;
 }
 
+std::vector<Slot*> Solver::getSlots() const {
+    return _slots;
+}
+
+bool Solver::solve(const Dictionary* dictionary) {
+    int index = 0;
+    while(index < _slots.size()) {
+        std::vector<std::string> words = dictionary->getWordsByLength(_slots[_treeIndexes[index]]->getSize());
+        int wordIndex = _slots[_treeIndexes[index]]->getWordId();
+        while(wordIndex < words.size()) {
+            std::vector<Restriction*> restrictions = _slots[_treeIndexes[index]]->getRestrictions();
+            if (std::all_of(restrictions.begin(), restrictions.end(), [&](Restriction* restriction) {
+                std::string otherWord = _slots[restriction->getIdOtherWord()]->getWord();
+                return otherWord == "" || words[wordIndex][restriction->getMyLetterPos()] == otherWord[restriction->getOtherWordLetterPos()];
+            })) {
+                _slots[_treeIndexes[index]]->setWord(words[wordIndex]);
+                _slots[_treeIndexes[index]]->setWordId(wordIndex);
+                break;
+            } else {
+                wordIndex++;
+            }
+        }
+        if (wordIndex >= words.size()) {
+            _slots[_treeIndexes[index]]->setWord("");
+            _slots[_treeIndexes[index]]->setWordId(0);
+            index--;
+            if (index == -1 ) {
+                break;
+            }
+            _slots[_treeIndexes[index]]->setWord("");
+            _slots[_treeIndexes[index]]->setWordId(_slots[_treeIndexes[index]]->getWordId() + 1);
+            
+        } else {
+            index++;
+        }
+    }
+
+    return index != -1;
+}
+
+

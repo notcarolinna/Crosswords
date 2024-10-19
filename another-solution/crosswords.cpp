@@ -42,9 +42,11 @@ int main() {
 
     std::cout << "Solver: Start solving " << slots.size() << " slots" << std::endl;
 
-
-
-
+    if (solver.solve(&dictionary)) {
+        grid.showWords(solver.getSlots());
+    } else {
+        std::cout << "Solução não encontrada" << std::endl;
+    }
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "\n\n\t***Game completed in " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]!***" << std::endl;
