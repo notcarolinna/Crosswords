@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <unordered_set>
 
 
@@ -14,9 +14,10 @@ class Dictionary {
 public:
     Dictionary();
     void parseFile(std::string fileName, std::unordered_set<int> sizes);
+    std::vector<std::string> getWordsByLength(int length) const;
 
 private:
-    std::unordered_map<int, std::vector<std::string>> _wordMap;
+    std::map<int, std::vector<std::string>> _wordMap;
 
     void leftTrim(std::string &str);
     void rightTrim(std::string &str);

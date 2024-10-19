@@ -60,6 +60,20 @@ int Grid::getWordLength(int& i, int& j, const Slot::Direction& direction, const 
     return 1 + getWordLength(i, j, direction, wordId);
 }
 
+void Grid::showWords(const std::vector<Slot*>& slots) {
+    for(Slot* slot : slots) {
+        for(int i = 0; i < slot->getSize(); i++) {
+            if (slot->getDirection() == Slot::Direction::HORIZONTAL) {
+                _grid[slot->getStartPos().first][slot->getStartPos().second + i] = slot->getWord()[i];
+            } else {
+                _grid[slot->getStartPos().first + i][slot->getStartPos().second] = slot->getWord()[i];
+            }
+            
+        }
+    }
+    print();
+}
+
 void Grid::fillRestrictionHelper(Slot* slot) {
     assert(slot->getDirection() == Slot::Direction::HORIZONTAL);
     for(int i = 0; i < slot->getSize(); i++) {

@@ -45,11 +45,14 @@ void Dictionary::parseFile(std::string fileName, std::unordered_set<int> sizes) 
     }
 
     for (const auto& pair : _wordMap) {
-        std::cout << "SIZE " << pair.first << ": ";
+        std::cout << "SIZE " << pair.first << ": " << pair.second.size() << " words" << std::endl;
+    }
+}
 
-        for(const auto& word : pair.second) {
-            std::cout << word << " ";
-        }
-        std::cout << std::endl;
+std::vector<std::string> Dictionary::getWordsByLength(int length) const {
+    try {
+        return _wordMap.at(length);
+    } catch(std::out_of_range const & e) { 
+        return {};
     }
 }

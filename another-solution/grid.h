@@ -17,6 +17,7 @@ public:
     void loadFromFile(std::string fileName);
     void verify() const;
     void loadSlots();
+    void showWords(const std::vector<Slot*>& slots);
 
     void print() const;
 
