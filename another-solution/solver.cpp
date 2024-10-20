@@ -31,6 +31,10 @@ void Solver::loadTreeIndexes() {
         }
     }
 
+    for (int index : _treeIndexes) {
+        std::cout << index << ", ";
+    }
+    std::cout << std::endl;
 }
 
 int Solver::getMostRestricted() {
@@ -64,10 +68,6 @@ int Solver::getMostRestricted(std::vector<Restriction*> restrictions) {
     }
 
     return maxId;
-}
-
-std::vector<int> Solver::getTreeIndexes() const {
-    return _treeIndexes;
 }
 
 std::vector<Slot*> Solver::getSlots() const {

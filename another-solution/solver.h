@@ -13,7 +13,6 @@ public:
     Solver(const std::vector<Slot*> slots);
 
     void loadTreeIndexes();
-    std::vector<int> getTreeIndexes() const;
     std::vector<Slot*> getSlots() const;
     bool solve(const Dictionary* dictionary);
 

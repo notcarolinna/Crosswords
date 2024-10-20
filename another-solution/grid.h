@@ -13,10 +13,9 @@ public:
     
     int getRowSize() const;
     int getColSize() const;
-    std::vector<Slot*> getSlots() const;
+    std::vector<Slot*> getSlots();
     void loadFromFile(std::string fileName);
     void verify() const;
-    void loadSlots();
     void showWords(const std::vector<Slot*>& slots);
 
     void print() const;
@@ -24,11 +23,10 @@ public:
 private:
     std::string _name;
     std::vector<std::vector<int>> _grid;
-    std::vector<Slot*> _slots;
 
     bool isInside(const int i, const int j) const;
     int getWordLength(int& i, int& j, const Slot::Direction& direction, const int wordId);
-    std::vector<Restriction*> getRestrictions(Slot* slot);
+    std::vector<Restriction*> getRestrictions(Slot* slot, const std::vector<Slot*> slots);
     void fillRestrictionHelper(Slot* slot);
 };
 

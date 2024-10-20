@@ -20,7 +20,6 @@ int main() {
     std::cout << "Grid: verifying" << std::endl;
     grid.verify();
     grid.print();
-    grid.loadSlots();
 
     std::unordered_set<int> wordsSize;
     std::vector<Slot*> slots = grid.getSlots();
@@ -35,11 +34,6 @@ int main() {
 
     Solver solver = Solver(slots);
 
-    for (int index : solver.getTreeIndexes()) {
-        std::cout << index << ", ";
-    }
-    std::cout << std::endl;
-
     std::cout << "Solver: Start solving " << slots.size() << " slots" << std::endl;
 
     if (solver.solve(&dictionary)) {
@@ -49,7 +43,7 @@ int main() {
     }
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "\n\n\t***Game completed in " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]!***" << std::endl;
+    std::cout << "\n\n\t***Game completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]!***" << std::endl;
     std::cout << " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;    
 
     return 0;

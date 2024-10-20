@@ -60,6 +60,77 @@ int Grid::getWordLength(int& i, int& j, const Slot::Direction& direction, const 
     return 1 + getWordLength(i, j, direction, wordId);
 }
 
+void Grid::fillRestrictionHelper(Slot* slot) {
+    assert(slot->getDirection() == Slot::Direction::HORIZONTAL);
+    for(int i = 0; i < slot->getSize(); i++) {
+        _grid[slot->getStartPos().first][slot->getStartPos().second + i] = slot->getId();
+    }
+}
+
+std::vector<Restriction*> Grid::getRestrictions(Slot* slot, const std::vector<Slot*> slots) {
+    std::vector<Restriction*> restrictions = {};
+    assert(slot->getDirection() == Slot::Direction::VERTICAL);
+    for(int i = 0; i < slot->getSize(); i++) {
+        
+        int idOtherWord = _grid[slot->getStartPos().first + i][slot->getStartPos().second];
+        if ( idOtherWord != '?') {
+            Restriction* restriction = new Restriction();
+            restriction->setMyLetterPos(i);
+            restriction->setIdOtherWord(idOtherWord);
+            restriction->setOtherWordLetterPos(slot->getStartPos().second - slots[idOtherWord]->getStartPos().second);
+            restrictions.push_back(restriction);
+        }
+    }
+
+    return restrictions;
+}
+
+std::vector<Slot*> Grid::getSlots() {
+    std::vector<Slot*> slots = {};
+    for (int i = 0; i < getRowSize(); i++) {
+        for (int j = 0; j < getColSize(); j++) {        
+            std::pair<int, int> startPos = {i, j};
+            int length = getWordLength(i, j, Slot::Direction::HORIZONTAL, slots.size());
+
+            if (length > 1) {
+                Slot* slot = new Slot();
+                slot->setId(slots.size());
+                slot->setDirection(Slot::Direction::HORIZONTAL);
+                slot->setStartPos(startPos);
+                slot->setSize(length);
+                fillRestrictionHelper(slot);
+                slots.push_back(slot);
+            }
+        }
+    }
+
+    for (int j = 0; j < getColSize(); j++) {
+        for (int i = 0; i < getRowSize(); i++) {        
+            std::pair<int, int> startPos = {i, j};
+            int length = getWordLength(i, j, Slot::Direction::VERTICAL, slots.size());
+
+            if (length > 1) {
+                Slot* slot = new Slot();
+                slot->setId(slots.size());
+                slot->setDirection(Slot::Direction::VERTICAL);
+                slot->setStartPos(startPos);
+                slot->setSize(length);
+                slot->setRestrictions(getRestrictions(slot, slots));
+                slots.push_back(slot);
+
+                for(Restriction* restriction : slot->getRestrictions()) {
+                    Restriction* invertedRestriction = new Restriction();
+                    invertedRestriction->setIdOtherWord(slot->getId());
+                    invertedRestriction->setMyLetterPos(restriction->getOtherWordLetterPos());
+                    invertedRestriction->setOtherWordLetterPos(restriction->getMyLetterPos());
+                    slots[restriction->getIdOtherWord()]->addRestriction(invertedRestriction);
+                }
+            }
+        }
+    }
+    return slots;
+}
+
 void Grid::showWords(const std::vector<Slot*>& slots) {
     for(Slot* slot : slots) {
         for(int i = 0; i < slot->getSize(); i++) {
@@ -72,79 +143,6 @@ void Grid::showWords(const std::vector<Slot*>& slots) {
         }
     }
     print();
-}
-
-void Grid::fillRestrictionHelper(Slot* slot) {
-    assert(slot->getDirection() == Slot::Direction::HORIZONTAL);
-    for(int i = 0; i < slot->getSize(); i++) {
-        _grid[slot->getStartPos().first][slot->getStartPos().second + i] = slot->getId();
-    }
-}
-
-std::vector<Restriction*> Grid::getRestrictions(Slot* slot) {
-    std::vector<Restriction*> restrictions = {};
-    assert(slot->getDirection() == Slot::Direction::VERTICAL);
-    for(int i = 0; i < slot->getSize(); i++) {
-        
-        int idOtherWord = _grid[slot->getStartPos().first + i][slot->getStartPos().second];
-        if ( idOtherWord != '?') {
-            Restriction* restriction = new Restriction();
-            restriction->setMyLetterPos(i);
-            restriction->setIdOtherWord(idOtherWord);
-            restriction->setOtherWordLetterPos(slot->getStartPos().second - _slots[idOtherWord]->getStartPos().second);
-            restrictions.push_back(restriction);
-        }
-    }
-
-    return restrictions;
-}
-
-void Grid::loadSlots() {
-    for (int i = 0; i < getRowSize(); i++) {
-        for (int j = 0; j < getColSize(); j++) {        
-            std::pair<int, int> startPos = {i, j};
-            int length = getWordLength(i, j, Slot::Direction::HORIZONTAL, _slots.size());
-
-            if (length > 1) {
-                Slot* slot = new Slot();
-                slot->setId(_slots.size());
-                slot->setDirection(Slot::Direction::HORIZONTAL);
-                slot->setStartPos(startPos);
-                slot->setSize(length);
-                fillRestrictionHelper(slot);
-                _slots.push_back(slot);
-            }
-        }
-    }
-
-    for (int j = 0; j < getColSize(); j++) {
-        for (int i = 0; i < getRowSize(); i++) {        
-            std::pair<int, int> startPos = {i, j};
-            int length = getWordLength(i, j, Slot::Direction::VERTICAL, _slots.size());
-
-            if (length > 1) {
-                Slot* slot = new Slot();
-                slot->setId(_slots.size());
-                slot->setDirection(Slot::Direction::VERTICAL);
-                slot->setStartPos(startPos);
-                slot->setSize(length);
-                slot->setRestrictions(getRestrictions(slot));
-                _slots.push_back(slot);
-
-                for(Restriction* restriction : slot->getRestrictions()) {
-                    Restriction* invertedRestriction = new Restriction();
-                    invertedRestriction->setIdOtherWord(slot->getId());
-                    invertedRestriction->setMyLetterPos(restriction->getOtherWordLetterPos());
-                    invertedRestriction->setOtherWordLetterPos(restriction->getMyLetterPos());
-                    _slots[restriction->getIdOtherWord()]->addRestriction(invertedRestriction);
-                }
-            }
-        }
-    }
-}
-
-std::vector<Slot*> Grid::getSlots() const {
-    return _slots;
 }
 
 void Grid::print() const {
