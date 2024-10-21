@@ -32,6 +32,12 @@ public:
     void setRestrictions(const std::vector<Restriction*>& restrictions);
     void addRestriction(Restriction* restrictions);
 
+    std::string getWord() const;
+    void setWord(const std::string word);
+
+    int getWordId() const;
+    void setWordId(const int id);
+
     friend std::ostream& operator<<(std::ostream& os, Slot* s);
 
 private:
@@ -40,6 +46,8 @@ private:
     std::pair<int, int> _startPos;
     Direction _direction;
     std::vector<Restriction*> _restrictions;
+    std::string _word;
+    int _wordId;
 
 };
 

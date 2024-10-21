@@ -44,9 +44,25 @@ void Slot::addRestriction(Restriction* restriction) {
     _restrictions.push_back(restriction);
 }
 
+std::string Slot::getWord() const {
+    return _word;
+}
+
+void Slot::setWord(const std::string word) {
+    _word = word;
+}
+
+int Slot::getWordId() const {
+    return _wordId;
+}
+
+void Slot::setWordId(const int id) {
+    _wordId = id;
+}
+
 std::ostream& operator<<(std::ostream& os, Slot* s) {
-    os << "[SIZE] " << s->getSize() << " [STARTPOS] " << s->getStartPos().first << ", "
-        << s->getStartPos().second << " [DIRECTION] " << s->getDirection()
-        << " [RESTRICTIONS] " << s->getRestrictions();
+    os << "[ID] " << s->getId() << " [SIZE] " << s->getSize() << " [STARTPOS] (" << s->getStartPos().first << ", "
+        << s->getStartPos().second << ") [DIRECTION] " << s->getDirection() << " [WORD] " << s->getWord() << " [WORD_ID] "
+        << s->getWordId() << " [RESTRICTIONS] " << s->getRestrictions().size() << ": " << s->getRestrictions();
     return os;
 }
